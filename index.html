@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Escalonador de Processos Round-Robin</title>
+	<link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="./estilo.css">
+</head>
+<body>
+	<!-- http://www.decom.fee.unicamp.br/~rmorbach/conteudo/Comtel.pdf -->
+	<!-- https://github.com/ericalves/escalonador-robin-round -->
+	<!-- http://ericalves.github.io/escalonador-robin-round/ -->
+	<!-- https://github.com/mkautzmann/SimuladorEscalonadorJS -->
+	<header class="page-header">
+		<div class="container">			
+			<h1>Escalonador Round-Robin</h1>
+		</div>
+	</header>
+	<section>
+		<div class="container">
+			<aside class="col-md-4">
+				<div class="panel panel-default">
+					<div class="panel-heading"><h4>Parâmetros</h4></div>
+					<div class="panel-body">
+						<label class="col-md-12">
+							Quantum (ms)
+							<input class="form-control" type="number" name="" value="">
+						</label>
+						<label class="col-md-12">
+							Máx. tempo de vida (ms)
+							<input class="form-control" type="number" name="" value="">
+						</label>
+						<label class="col-md-12">
+							Processos / minuto
+							<input class="form-control" type="number" name="" value="">
+						</label>
+						<label class="col-md-12">
+							% IO-bound
+							<input class="form-control" type="number" min="0" max="100" required>
+						</label>
+						<div class="col-md-12">
+							<button type="button" class="btn btn-default btn-lg btn-primary">Simular</button>
+						</div>
+					</div>
+				</div>
+			</aside>
+			<aside class="col-md-8">
+				<div class="panel panel-default">
+					<div class="panel-heading"><h4>Processos</h4></div>
+					<table class="table">
+						<tr>
+							<th>PID</th>
+							<th>Status</th>
+							<th>% executado</th>
+						</tr>
+						<tr>
+							<td>
+								1
+							</td>
+							<td>Executando</td>
+							<td>
+								50%
+							</td>
+						</tr>
+					</table>
+				</div>
+			</aside>
+		</div>
+	</section>
+
+	<script type="text/javascript" src="./round-robin.js"></script>
+</body>
+</html>
