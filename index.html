@@ -3,7 +3,9 @@
 <head>
 	<meta charset="utf-8">
 	<title>Escalonador de Processos Round-Robin</title>
-	<link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.min.css">
+
+	<!-- <link rel="stylesheet" type="text/css" href="https://bootswatch.com/sandstone/bootstrap.css"> -->
 	<link rel="stylesheet" type="text/css" href="./estilo.css">
 </head>
 <body>
@@ -22,25 +24,36 @@
 				<div class="panel panel-default">
 					<div class="panel-heading"><h4>Parâmetros</h4></div>
 					<div class="panel-body">
-						<label class="col-md-12">
-							Quantum (ms)
-							<input class="form-control" type="number" name="" value="">
-						</label>
-						<label class="col-md-12">
-							Máx. tempo de vida (ms)
-							<input class="form-control" type="number" name="" value="">
-						</label>
-						<label class="col-md-12">
-							Processos / minuto
-							<input class="form-control" type="number" name="" value="">
-						</label>
-						<label class="col-md-12">
-							% IO-bound
-							<input class="form-control" type="number" min="0" max="100" required>
-						</label>
-						<div class="col-md-12">
-							<button type="button" class="btn btn-default btn-lg btn-primary">Simular</button>
-						</div>
+						<form class="form-group">
+							<div class="col-md-12">
+								Quantum
+				                <div class="input-group">
+									<input class="form-control" type="number" name="" value="">
+									<div class="input-group-addon">ms</div>
+				                </div>
+							</div>
+							<div class="col-md-12">
+								Máx. tempo de vida
+				                <div class="input-group">
+									<input class="form-control" type="number" name="" value="">
+									<div class="input-group-addon">ms</div>
+				                </div>
+							</div>
+							<div class="col-md-12">
+								Processos / minuto
+								<input class="form-control" type="number" name="" value="">
+							</div>
+							<div class="col-md-12">
+								IO-bound
+				                <div class="input-group">
+									<input class="form-control" type="number" name="" value="">
+									<div class="input-group-addon">%</div>
+				                </div>
+							</div>
+							<div class="col-md-12">
+								<button type="button" class="btn btn-default btn-primary pull-right">Simular</button>
+							</div>
+						</form>
 					</div>
 				</div>
 			</aside>
@@ -59,7 +72,11 @@
 							</td>
 							<td>Executando</td>
 							<td>
-								50%
+								<div class="progress">
+								  	<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%">
+								    	<span>40%</span>
+								  	</div>
+								</div>
 							</td>
 						</tr>
 					</table>
