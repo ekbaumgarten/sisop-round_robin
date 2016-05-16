@@ -11,15 +11,19 @@ angular.module('escalonadorApp', [])
 		};
 
 		$escalonador.addProcesso = function () {
-			var processo = {
-				pid : $escalonador.processos.length + 1,
-				status: {name: 'aguardando', label: 'Aguardando'},
-				tempo_vida: Math.random(1, $escalonador.params.max_tempo_vida),
-				executado: 0,
-				percentual_executado: 0
-			}
+			var wk = new Worker("js/processo.js");
+			wk.onmessage = function(e) {
+				$escalonador.executeMessage(e.data); //Será executada esta função (aqui no main)
+			};
 
-			$escalonador.processos.push(processo);
+			var pid = $escalonador.processos.length + 1;
+
+			wk.postMessage({
+				action: "criar",
+				params: $escalonador.params,
+				pid: pid
+			});
+
 		}
 
 		var iCriarProcesso;
@@ -49,10 +53,20 @@ angular.module('escalonadorApp', [])
 			};
 
 			iCriarProcesso = $interval(function() {
-				console.log('add');
 				$escalonador.addProcesso();
 			}, 60000 / $escalonador.params.processos_minuto);
 			
+		}
+
+		$escalonador.executeMessage = function (message) {
+			var acao = message.action;
+			var params = message.params;
+			switch (acao) {
+				case "atualiza_processo" :
+					$escalonador.processos[params.processo.pid - 1] = params.processo;
+				break;
+			}
+			$scope.$apply();
 		}
 		
 	}]);
