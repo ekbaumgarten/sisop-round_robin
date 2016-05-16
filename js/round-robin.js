@@ -9,27 +9,33 @@ angular.module('escalonadorApp', [])
 			processos_minuto : 20,
 			io_bound : 20,
 		};
-
+		$escalonador.iCriarProcesso = null;
+		$escalonador.iExecutarFila = null;
+		$escalonador.indiceProcessoAtual = -1;
+		
 		$escalonador.addProcesso = function () {
 			var wk = new Worker("js/processo.js");
+			
 			wk.onmessage = function(e) {
 				$escalonador.executeMessage(e.data); //Será executada esta função (aqui no main)
 			};
 
 			var pid = $escalonador.processos.length + 1;
 
+			$escalonador.processos[pid-1] = {};
+			$escalonador.processos[pid-1].worker = wk;
+			// $escalonador.processos[pid - 1].dados = {};
+
 			wk.postMessage({
 				action: "criar",
 				params: $escalonador.params,
 				pid: pid
 			});
-
 		}
 
-		var iCriarProcesso;
 		$escalonador.simular = function () {
 			$escalonador.processos.clear();
-			$interval.cancel(iCriarProcesso);
+			$interval.cancel($escalonador.iCriarProcesso);
 
 			var parametros = $escalonador.params;
 			if (parametros.quantum < 1) {
@@ -52,18 +58,49 @@ angular.module('escalonadorApp', [])
 				return false;
 			};
 
-			iCriarProcesso = $interval(function() {
+			$escalonador.addProcesso();
+			// proximo();
+			$escalonador.iCriarProcesso = $interval(function() {
 				$escalonador.addProcesso();
 			}, 60000 / $escalonador.params.processos_minuto);
 			
+			$escalonador.iExecutarFila = $interval(function() {
+				$escalonador.processos[$escalonador.indiceProcessoAtual].worker.postMessage({
+					action: "parar",
+					params: null
+				});
+				
+			}, $escalonador.params.quantum);
+
 		}
+
+		function proximo () {
+			$escalonador.indiceProcessoAtual++;
+			if ($escalonador.indiceProcessoAtual == $escalonador.processos.length) {
+				$escalonador.indiceProcessoAtual = 0;
+			}
+			console.log($escalonador.indiceProcessoAtual);
+			$escalonador.processos[$escalonador.indiceProcessoAtual].worker.postMessage({
+				action: "executar",
+				params: null
+			});
+		}
+
 
 		$escalonador.executeMessage = function (message) {
 			var acao = message.action;
 			var params = message.params;
 			switch (acao) {
 				case "atualiza_processo" :
-					$escalonador.processos[params.processo.pid - 1] = params.processo;
+					$escalonador.processos[params.processo.pid - 1].dados = params.processo;
+					console.log($escalonador.processos[params.processo.pid - 1].dados);
+					// console.log()
+					if ($escalonador.indiceProcessoAtual == -1) {
+						proximo();
+					}
+				break;
+				case "processo_finalizado" :
+					proximo();
 				break;
 			}
 			$scope.$apply();

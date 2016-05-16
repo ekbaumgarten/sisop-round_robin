@@ -61,17 +61,21 @@
 						<tr>
 							<th>PID</th>
 							<th>Status</th>
+							<th>Tempo de vida (ms)</th>
+							<th>Executado (ms)</th>
 							<th>% executado</th>
 						</tr>
 						<tr ng-repeat="processo in escalonador.processos">
 							<td>
-								{{processo.pid}}
+								{{processo.dados.pid}}
 							</td>
-							<td>{{processo.status.label}}</td>
+							<td>{{processo.dados.status.label}}</td>
+							<td>{{processo.dados.tempo_vida}}</td>
+							<td>{{processo.dados.executado}}</td>
 							<td>
 								<div class="progress">
-								  	<div class="progress-bar progress-bar-success {{processo.status.name}}" role="progressbar" aria-valuenow="{{processo.percentual_executado}}" aria-valuemin="0" aria-valuemax="100" style="width: {{processo.percentual_executado}}%">
-								    	<span>{{processo.percentual_executado}}%</span>
+								  	<div class="progress-bar progress-bar-success {{processo.dados.status.name}}" role="progressbar" aria-valuenow="{{processo.dados.percentual_executado}}" aria-valuemin="0" aria-valuemax="100" style="width: {{processo.dados.percentual_executado}}%">
+								    	<span>{{processo.dados.percentual_executado}}%</span>
 								  	</div>
 								</div>
 							</td>

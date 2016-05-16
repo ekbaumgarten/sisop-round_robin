@@ -13,13 +13,12 @@ var executeMessage = function (message) {
 
 	var acao = message.action;
 	var params = message.params;
-	// console.log(message);
 
 	switch (acao) {
 		case "criar" :
 			processo.pid = message.pid;
 			
-			processo.tempo_vida = Math.random(1, params.max_tempo_vida);
+			processo.tempo_vida = getRandomInt(1, params.max_tempo_vida);
 			
 			postMessage({
 				action: "atualiza_processo",
@@ -28,6 +27,19 @@ var executeMessage = function (message) {
 				}
 			});
 		break;
+		case "executar" :
+			console.log('Executar ' + processo.pid);
+		break
+		case "parar":
+			console.log('parar');
+			postMessage({
+				action: "processo_finalizado"
+			});
+		break;
 	}
 
+}
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
