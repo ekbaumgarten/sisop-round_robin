@@ -1,12 +1,32 @@
-var processo = {
-	status: {name: 'aguardando', label: 'Aguardando'},
-	executado: 0,
-	pid: 0,
-	percentual_executado: 0
-}
+var processo = null;
+var timeoutExecute = null;
+var executeInitTime = null;
 
 var onmessage = function (e) {
 	executeMessage(e.data);
+}
+
+var finalizar = function () {
+	console.log('finalizar');
+	postMessage({
+		action: "processo_finalizado",
+		pid: processo.pid,
+		executado:  Math.min(processo.tempo_vida, processo.executado)
+	});
+}
+
+var parar = function () {
+	clearTimeout(timeoutExecute);
+	processo.executado = processo.executado + (Math.max(1, Date.now() - executeInitTime));
+	if (processo.executado >= processo.tempo_vida) {
+		finalizar();
+	} else {
+		postMessage({
+			action: "processo_parado",
+			pid: processo.pid,
+			executado:  Math.min(processo.tempo_vida, processo.executado)
+		});
+	}
 }
 
 var executeMessage = function (message) {
@@ -16,30 +36,30 @@ var executeMessage = function (message) {
 
 	switch (acao) {
 		case "criar" :
-			processo.pid = message.pid;
-			
-			processo.tempo_vida = getRandomInt(1, params.max_tempo_vida);
-			
+			processo = message.processo;
+			// processo.pid = message.pid;
+			// console.log(processo);
 			postMessage({
-				action: "atualiza_processo",
-				params: {
-					"processo": processo					
-				}
+				action: "processo_criado",
+				processo: processo					
+				// params: {
+				// }
 			});
 		break;
 		case "executar" :
-			console.log('Executar ' + processo.pid);
+			console.log('exec', processo);
+			executeInitTime = Date.now();
+			console.log(params.quantum);
+			timeoutExecute = setTimeout(function() {	
+				parar();
+			}, params.quantum);
+
+			// console.log('Executar ' + processo.pid);
 		break
 		case "parar":
-			console.log('parar');
-			postMessage({
-				action: "processo_finalizado"
-			});
+			parar();			
 		break;
 	}
 
 }
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-}
