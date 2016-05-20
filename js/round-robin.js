@@ -18,7 +18,7 @@ angular.module('escalonadorApp', [])
 			var wk = new Worker("js/processo.js");
 			
 			wk.onmessage = function(e) {
-				$escalonador.executeMessage(e.data); //Será executada esta função (aqui no main)
+				$escalonador.executeMessage(e.data);
 			};
 
 			var pid = $escalonador.processos.length + 1;

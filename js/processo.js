@@ -16,8 +16,9 @@ var finalizar = function () {
 }
 
 var parar = function () {
-	clearTimeout(timeoutExecute);
+	// clearTimeout(timeoutExecute);
 	processo.executado = processo.executado + (Math.max(1, Date.now() - executeInitTime));
+	console.log(processo.executado);
 	if (processo.executado >= processo.tempo_vida) {
 		finalizar();
 	} else {
@@ -47,12 +48,12 @@ var executeMessage = function (message) {
 			});
 		break;
 		case "executar" :
-			console.log('exec', processo);
+			// console.log('exec', processo);
 			executeInitTime = Date.now();
-			console.log(params.quantum);
-			timeoutExecute = setTimeout(function() {	
-				parar();
-			}, params.quantum);
+			// console.log(params.quantum);
+			// timeoutExecute = setTimeout(function() {	
+				// parar();
+			// }, params.quantum);
 
 			// console.log('Executar ' + processo.pid);
 		break
