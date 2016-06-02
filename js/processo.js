@@ -7,7 +7,6 @@ var onmessage = function (e) {
 }
 
 var finalizar = function () {
-	console.log('finalizar');
 	postMessage({
 		action: "processo_finalizado",
 		pid: processo.pid,
@@ -16,9 +15,8 @@ var finalizar = function () {
 }
 
 var parar = function () {
-	// clearTimeout(timeoutExecute);
+	clearTimeout(timeoutExecute);
 	processo.executado = processo.executado + (Math.max(1, Date.now() - executeInitTime));
-	console.log(processo.executado);
 	if (processo.executado >= processo.tempo_vida) {
 		finalizar();
 	} else {
@@ -37,28 +35,27 @@ var executeMessage = function (message) {
 
 	switch (acao) {
 		case "criar" :
-			processo = message.processo;
-			// processo.pid = message.pid;
-			// console.log(processo);
+			processo = message.processo;			
 			postMessage({
 				action: "processo_criado",
 				processo: processo					
-				// params: {
-				// }
 			});
 		break;
 		case "executar" :
-			// console.log('exec', processo);
+			
 			executeInitTime = Date.now();
-			// console.log(params.quantum);
-			// timeoutExecute = setTimeout(function() {	
-				// parar();
-			// }, params.quantum);
-
-			// console.log('Executar ' + processo.pid);
-		break
+			postMessage({
+				action: "processo_executando",
+				processo: processo					
+			});
+			
+			timeoutExecute = setTimeout(function () {
+				parar();
+			}, processo.tempo_vida - processo.executado);
+		break;
 		case "parar":
-			parar();			
+			parar();
+
 		break;
 	}
 

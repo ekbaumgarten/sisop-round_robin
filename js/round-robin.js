@@ -1,5 +1,5 @@
 angular.module('escalonadorApp', [])
-	.controller('EscalonadorController', ['$scope', '$interval', function($scope, $interval) {
+	.controller('EscalonadorController', ['$scope', '$interval', '$timeout', function($scope, $interval, $timeout) {
 		var $escalonador = this;
 		
 		$escalonador.processos = [];		
@@ -11,7 +11,7 @@ angular.module('escalonadorApp', [])
 			io_bound : 20,
 		};
 		$escalonador.iCriarProcesso = null;
-		$escalonador.iExecutarFila = null;
+		$escalonador.tExecutarFila = null;
 		$escalonador.indiceProcessoAtual = -1;
 		
 		$escalonador.addProcesso = function () {
@@ -38,7 +38,7 @@ angular.module('escalonadorApp', [])
 			$escalonador.processos_finalizados.clear();
 			$escalonador.indiceProcessoAtual = -1;
 			$interval.cancel($escalonador.iCriarProcesso);
-			$interval.cancel($escalonador.iExecutarFila);
+			$timeout.cancel($escalonador.tExecutarFila);
 
 			var parametros = $escalonador.params;
 			if (parametros.quantum < 1) {
@@ -62,16 +62,22 @@ angular.module('escalonadorApp', [])
 			};
 
 			$escalonador.addProcesso();
-			// proximo();
 			$escalonador.iCriarProcesso = $interval(function() {
 				$escalonador.addProcesso();
 			}, 60000 / $escalonador.params.processos_minuto);
 			
-			$escalonador.iExecutarFila = $interval(function() {
-				$escalonador.processos[$escalonador.indiceProcessoAtual].worker.postMessage({
-					action: "parar",
-					params: null
-				});
+			// resetQuantum();
+		}
+
+		function resetQuantum () {
+			$timeout.cancel($escalonador.tExecutarFila);
+			$escalonador.tExecutarFila = $timeout(function() {
+				if ($escalonador.processos[$escalonador.indiceProcessoAtual]) {
+					$escalonador.processos[$escalonador.indiceProcessoAtual].worker.postMessage({
+						action: "parar",
+						params: null
+					});
+				}
 				
 			}, $escalonador.params.quantum);
 
@@ -116,6 +122,9 @@ angular.module('escalonadorApp', [])
 					// console.log($escalonador.processos[message.pid-1].dados.executado, $escalonador.processos[message.pid-1].tempo_vida);
 					$escalonador.processos[message.pid-1].dados.percentual_executado = parseFloat(Math.min($escalonador.processos[message.pid-1].dados.executado / $escalonador.processos[message.pid-1].dados.tempo_vida * 100, 100)).toFixed(2);
 					proximo();
+				break;
+				case "processo_executando" :
+					resetQuantum();
 				break;
 				case "processo_finalizado" :
 					$escalonador.processos[message.pid-1].worker.terminate();
