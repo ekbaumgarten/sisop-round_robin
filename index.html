@@ -4,8 +4,6 @@
 	<meta charset="utf-8">
 	<title>Escalonador de Processos Round-Robin</title>
 	<link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.min.css">
-
-	<!-- <link rel="stylesheet" type="text/css" href="https://bootswatch.com/sandstone/bootstrap.css"> -->
 	<link rel="stylesheet" type="text/css" href="./estilo.css">
 	<script src="./js/angular.min.js" type="text/javascript"></script>
 </head>
@@ -56,7 +54,12 @@
 			</aside>
 			<aside class="col-md-8">
 				<div class="panel panel-default">
-					<div class="panel-heading"><h4>Processos ({{escalonador.processos.length}})</h4></div>
+					<div class="panel-heading">
+						<h4>Processos ({{escalonador.processos.length}})</h4>
+						<h5 class="aguardando_io"><strong>Aguardando IO ({{escalonador.total_io_bound}})</strong></h5>
+						<h5 class="na_fila"><strong>Na fila ({{escalonador.processos.length - escalonador.total_io_bound - escalonador.processos_finalizados.length}})</strong></h5>
+						<h5 class="finalizado"><strong>Finalizados ({{escalonador.processos_finalizados.length}})</strong></h5>
+					</div>
 					<table class="table">
 						<tr>
 							<th>PID</th>
@@ -65,16 +68,16 @@
 							<th>Executado (ms)</th>
 							<th>% executado</th>
 						</tr>
-						<tr ng-repeat="processo in escalonador.processos">
+						<tr ng-repeat="processo in escalonador.processos | filter:{dados:'!'}">
 							<td>
 								{{processo.dados.pid}}
 							</td>
-							<td>{{processo.dados.status.label}}</td>
+							<td class="{{processo.dados.status.name}}"><strong>{{processo.dados.status.label}}</strong></td>
 							<td>{{processo.dados.tempo_vida}}</td>
 							<td>{{processo.dados.executado}}</td>
 							<td>
 								<div class="progress">
-								  	<div class="progress-bar progress-bar-success {{processo.dados.status.name}}" role="progressbar" aria-valuenow="{{processo.dados.percentual_executado}}" aria-valuemin="0" aria-valuemax="100" style="width: {{processo.dados.percentual_executado}}%">
+								  	<div class="progress-bar {{processo.dados.status.css_class}}" role="progressbar" aria-valuenow="{{processo.dados.percentual_executado}}" aria-valuemin="0" aria-valuemax="100" style="width: {{processo.dados.percentual_executado}}%">
 								    	<span>{{processo.dados.percentual_executado}}%</span>
 								  	</div>
 								</div>
@@ -85,6 +88,11 @@
 			</aside>
 		</div>
 	</section>
+	<footer>
+		<div class="container">
+			<p>Universidade Feevale - Sistemas Operacionais 1 / 201601 - Grupo 6</p>
+		</div>
+	</footer>
 	<script src="./js/round-robin.js" type="text/javascript" ></script>
 </body>
 </html>

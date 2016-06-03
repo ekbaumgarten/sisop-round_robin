@@ -5,11 +5,12 @@ angular.module('escalonadorApp', [])
 		$escalonador.processos = [];		
 		$escalonador.processos_finalizados = [];
 		$escalonador.params = {
-			quantum : 500,
-			max_tempo_vida : 5000,
-			processos_minuto : 20,
-			io_bound : 20,
+			quantum : 150,
+			max_tempo_vida : 2000,
+			processos_minuto : 60,
+			io_bound : 25,
 		};
+		$escalonador.total_io_bound = 0;
 		$escalonador.iCriarProcesso = null;
 		$escalonador.tExecutarFila = null;
 		$escalonador.indiceProcessoAtual = -1;
@@ -24,7 +25,14 @@ angular.module('escalonadorApp', [])
 			var pid = $escalonador.processos.length + 1;
 			$escalonador.processos[pid-1] = {};
 			$escalonador.processos[pid-1].worker = wk;
-			$escalonador.processos[pid-1].dados = new Processo(pid, StatusProcesso.STATUS_AGUARDANDO_IO, getRandomInt(1, $escalonador.params.max_tempo_vida));
+			var status_inicial = StatusProcesso.STATUS_NA_FILA;
+			if (getRandomInt(0, 100) < $escalonador.params.io_bound) {
+				status_inicial = StatusProcesso.STATUS_AGUARDANDO_IO;
+			}
+			$escalonador.processos[pid-1].dados = new Processo(pid, status_inicial, getRandomInt(1, $escalonador.params.max_tempo_vida));
+			if (status_inicial.name == StatusProcesso.STATUS_AGUARDANDO_IO.name) {
+				$escalonador.total_io_bound++;
+			}
 
 			wk.postMessage({
 				action: "criar",
@@ -66,7 +74,6 @@ angular.module('escalonadorApp', [])
 				$escalonador.addProcesso();
 			}, 60000 / $escalonador.params.processos_minuto);
 			
-			// resetQuantum();
 		}
 
 		function resetQuantum () {
@@ -89,7 +96,20 @@ angular.module('escalonadorApp', [])
 				$escalonador.indiceProcessoAtual = 0;
 			}
 
-			while($escalonador.processos_finalizados.indexOf($escalonador.processos[$escalonador.indiceProcessoAtual].dados.pid) > -1) {
+			while(typeof $escalonador.processos[$escalonador.indiceProcessoAtual] == 'undefined' ||	
+					$escalonador.processos_finalizados.indexOf($escalonador.processos[$escalonador.indiceProcessoAtual].dados.pid) > -1 ||
+					$escalonador.processos[$escalonador.indiceProcessoAtual].dados.status.name == StatusProcesso.STATUS_AGUARDANDO_IO.name) {
+				// console.log($escalonador.processos[$escalonador.indiceProcessoAtual].dados);
+				if ($escalonador.processos[$escalonador.indiceProcessoAtual] && $escalonador.processos[$escalonador.indiceProcessoAtual].dados.status.name == StatusProcesso.STATUS_AGUARDANDO_IO.name) {
+					if ($escalonador.processos[$escalonador.indiceProcessoAtual].dados.ciclos_io_restantes < 1) {
+						//ficou aguardando IO por 1 ciclo. agora vai pra fila
+						$escalonador.processos[$escalonador.indiceProcessoAtual].dados.status = StatusProcesso.STATUS_NA_FILA;
+						$escalonador.total_io_bound--;
+					}
+					$escalonador.processos[$escalonador.indiceProcessoAtual].dados.ciclos_io_restantes--;
+				} else {
+					delete $escalonador.processos[$escalonador.indiceProcessoAtual];//remove o processo da lista de execução, depois de 1 ciclo
+				}
 				$escalonador.indiceProcessoAtual++;
 				if ($escalonador.indiceProcessoAtual == $escalonador.processos.length) {
 					$escalonador.indiceProcessoAtual = -1;
@@ -101,7 +121,9 @@ angular.module('escalonadorApp', [])
 					action: "executar",
 					params: $escalonador.params
 				});
-			};
+			} else {
+				proximo();
+			}
 			
 		}
 
@@ -117,22 +139,19 @@ angular.module('escalonadorApp', [])
 					}
 				break;
 				case "processo_parado" :
-					// console.log(message);
+					
 					$escalonador.processos[message.pid-1].dados.executado = message.executado;
-					// console.log($escalonador.processos[message.pid-1].dados.executado, $escalonador.processos[message.pid-1].tempo_vida);
+					$escalonador.processos[message.pid-1].dados.status = StatusProcesso.STATUS_NA_FILA;
 					$escalonador.processos[message.pid-1].dados.percentual_executado = parseFloat(Math.min($escalonador.processos[message.pid-1].dados.executado / $escalonador.processos[message.pid-1].dados.tempo_vida * 100, 100)).toFixed(2);
 					proximo();
 				break;
 				case "processo_executando" :
+					$escalonador.processos[message.processo.pid-1].dados.status = StatusProcesso.STATUS_EXECUTANDO;
 					resetQuantum();
 				break;
 				case "processo_finalizado" :
-					$escalonador.processos[message.pid-1].worker.terminate();
+					$escalonador.processos[message.pid-1].worker.terminate();//destruímos o worker (thread) pois alguns navegadores podem ter limite.
 					$escalonador.processos_finalizados.push(message.pid);
-					// console.log($escalonador.processos.length);
-					// delete $escalonador.processos[message.pid-1];
-					// console.log($escalonador.processos.length);
-					// console.log($escalonador.processos);
 					$escalonador.processos[message.pid-1].dados.status = StatusProcesso.STATUS_FINALIZADO;
 					$escalonador.processos[message.pid-1].dados.executado = message.executado;
 					$escalonador.processos[message.pid-1].dados.percentual_executado = parseFloat(Math.min($escalonador.processos[message.pid-1].dados.executado / $escalonador.processos[message.pid-1].dados.tempo_vida * 100, 100)).toFixed(2);
@@ -145,10 +164,10 @@ angular.module('escalonadorApp', [])
 	}]);
 
 var StatusProcesso = {
-	STATUS_AGUARDANDO_IO: {name: 'aguardando_io', label: 'Aguardando IO'},
-	STATUS_NA_FILA: {name: 'na_fila', label: 'Na Fila'},
-	STATUS_EXECUTANDO: {name: 'executando', label: 'Executando'},
-	STATUS_FINALIZADO: {name: 'finalizado', label: 'Finalizado'}
+	STATUS_AGUARDANDO_IO: {name: 'aguardando_io', label: 'Aguardando IO', css_class: 'progress-bar-danger'},
+	STATUS_NA_FILA: {name: 'na_fila', label: 'Na Fila', css_class: 'progress-bar-warning'},
+	STATUS_EXECUTANDO: {name: 'executando', label: 'Executando', css_class: 'progress-bar-info'},
+	STATUS_FINALIZADO: {name: 'finalizado', label: 'Finalizado', css_class: 'progress-bar-success'}
 };
 
 
@@ -159,21 +178,17 @@ Processo = (function() {
 	Processo.prototype.executado = 0;
 	Processo.prototype.percentual_executado = 0;
 	Processo.prototype.tempo_vida = 0;
+	Processo.prototype.ciclos_io_restantes = 0;
 
-	Processo.prototype.STATUS_AGUARDANDO_IO = {name: 'aguardando_io', label: 'Aguardando IO'};
-	Processo.prototype.STATUS_NA_FILA = {name: 'na_fila', label: 'Na Fila'};
-	Processo.prototype.STATUS_EXECUTANDO = {name: 'executando', label: 'Executando'};
-	Processo.prototype.STATUS_FINALIZADO = {name: 'finalizado', label: 'Finalizado'};
 	function Processo (pid, status, tempo_vida) {
 		this.pid = pid;
 		this.status = status;
 		this.tempo_vida = tempo_vida;
 		this.executado = 0;
 		this.percentual_executado = 0;
-		// this.tempo_vida = getRandomInt(1, params.max_tempo_vida);
-		// executado: 0,
-		// pid: 0,
-		// percentual_executado: 0
+		if (status.name == StatusProcesso.STATUS_AGUARDANDO_IO.name) {
+			this.ciclos_io_restantes = 1;
+		}
 	}
 	return Processo;
 })();

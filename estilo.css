@@ -1,7 +1,29 @@
 .page-header{
 	text-align: center;
 }
+.progress {
+	margin-bottom: 0px;
+}
 .progress-bar {
 	-webkit-transition: none;
     transition: none;
+}
+.aguardando_io {
+	color: #a94442;
+}
+.na_fila {
+	color: #8a6d3b;
+}
+.executando {
+	color: #31708f;
+}
+.finalizado {
+	color: #3c763d;
+}
+
+footer {
+	text-align: center;
+	background-color: #3e444c;
+	color:#c8c8c8;
+	padding: 20px 0 10px;
 }
